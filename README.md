@@ -1,6 +1,7 @@
 # 🩺 medic
 
 [![CI](https://github.com/Rogsiel/medic/actions/workflows/ci.yml/badge.svg)](https://github.com/Rogsiel/medic/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/medic-cli.svg)](https://pypi.org/project/medic-cli/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 A small health-check CLI. Use it as a **checkpoint in a pipeline** (exit code + JUnit), as a
@@ -26,9 +27,9 @@ medic reports problems; it does not fix them.
 ## Install
 
 ```bash
+pipx install medic-cli          # or: pip install medic-cli
+# latest from git
 pipx install git+https://github.com/Rogsiel/medic.git
-# or from a clone
-pip install .
 ```
 
 Requires Python 3.10+. Enable shell completion (bash, zsh, fish) with:
