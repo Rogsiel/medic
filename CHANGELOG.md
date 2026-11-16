@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+- Distribution is now named `medic-cli` (the `medic` name on PyPI is taken); the command is still `medic`.
+- `medic --version` reads the installed package version.
+- Add README screenshot, AUR `PKGBUILD` (`packaging/`), and a PyPI publish step in the release workflow.
+
 ## 0.1.0
 
 Initial release.

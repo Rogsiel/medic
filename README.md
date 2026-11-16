@@ -8,6 +8,8 @@ A small health-check CLI. Use it as a **checkpoint in a pipeline** (exit code + 
 
 medic reports problems; it does not fix them.
 
+![medic running a staged check suite: one failure, a skipped dependent check, and a remediation hint](https://raw.githubusercontent.com/Rogsiel/medic/main/docs/screenshot.svg)
+
 ## Checks
 
 | Type | What it verifies |
