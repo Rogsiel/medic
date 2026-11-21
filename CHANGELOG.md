@@ -3,7 +3,7 @@
 ## 0.2.0
 
 Rewritten in Go. medic is now a single static binary (Linux, macOS, Windows; amd64, arm64), with a Docker image,
-a GitHub Action, an install script and an AUR package. The Python package `medic-cli` is discontinued.
+a GitHub Action and an install script. The Python package `medic-cli` is discontinued.
 
 Breaking: the config format is new (YAML, `version: 1`); the TOML config and most CLI flags are gone.
 

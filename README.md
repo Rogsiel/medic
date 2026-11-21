@@ -51,7 +51,6 @@ healthy: 2 passed, 1 warning in 129ms
 curl -fsSL https://raw.githubusercontent.com/Rogsiel/medic/main/install.sh | sh   # Linux, macOS
 go install github.com/Rogsiel/medic/cmd/medic@latest
 docker run --rm -v "$PWD:/work" ghcr.io/rogsiel/medic
-yay -S medic-bin                                                                   # Arch (AUR)
 ```
 
 Or download a binary from [releases](https://github.com/Rogsiel/medic/releases). Shell completion:
