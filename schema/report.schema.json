@@ -1,0 +1,145 @@
+{
+  "$id": "https://raw.githubusercontent.com/Rogsiel/medic/main/schema/report.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "checks": {
+      "items": {
+        "properties": {
+          "attempts": {
+            "type": "integer"
+          },
+          "depends_on": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "details": {
+            "type": "object"
+          },
+          "duration": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "remediation": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "passed",
+              "warning",
+              "failed",
+              "skipped",
+              "error"
+            ]
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "target": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "status",
+          "message",
+          "target",
+          "attempts",
+          "duration",
+          "depends_on",
+          "tags",
+          "details"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "duration": {
+      "type": "string"
+    },
+    "exit_code": {
+      "description": "0 healthy, 1 unhealthy, 3 internal error.",
+      "enum": [
+        0,
+        1,
+        3
+      ]
+    },
+    "fail_on": {
+      "enum": [
+        "failure",
+        "warning"
+      ]
+    },
+    "medic_version": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "started_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "summary": {
+      "properties": {
+        "error": {
+          "type": "integer"
+        },
+        "failed": {
+          "type": "integer"
+        },
+        "passed": {
+          "type": "integer"
+        },
+        "skipped": {
+          "type": "integer"
+        },
+        "total": {
+          "type": "integer"
+        },
+        "warning": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total",
+        "passed",
+        "warning",
+        "failed",
+        "skipped",
+        "error"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "medic_version",
+    "started_at",
+    "duration",
+    "fail_on",
+    "exit_code",
+    "summary",
+    "checks"
+  ],
+  "title": "medic report",
+  "type": "object"
+}

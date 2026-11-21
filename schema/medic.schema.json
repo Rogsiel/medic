@@ -1,0 +1,1700 @@
+{
+  "$defs": {
+    "days": {
+      "description": "A whole number of days with a d suffix (e.g. 30d).",
+      "examples": [
+        "7d",
+        "30d"
+      ],
+      "pattern": "(^[0-9]+d$)|\\$\\{",
+      "type": "string"
+    },
+    "duration": {
+      "description": "A duration with a unit: ns, us, ms, s, m, h (e.g. 500ms, 5s, 2m, 1h30m).",
+      "examples": [
+        "500ms",
+        "5s",
+        "2m"
+      ],
+      "pattern": "(^([0-9]+(\\.[0-9]+)?(ns|us|µs|ms|s|m|h))+$)|\\$\\{",
+      "type": "string"
+    },
+    "percent": {
+      "description": "A percentage with a % suffix (e.g. 85%, 99.5%).",
+      "examples": [
+        "85%",
+        "99.5%"
+      ],
+      "pattern": "(^[0-9]+(\\.[0-9]+)?%$)|\\$\\{",
+      "type": "string"
+    },
+    "size": {
+      "description": "A size with a unit: B, KB, MB, GB, TB (powers of 1000) or KiB, MiB, GiB, TiB (powers of 1024).",
+      "examples": [
+        "512MiB",
+        "10GB"
+      ],
+      "pattern": "(^[0-9]+(\\.[0-9]+)?(B|KB|MB|GB|TB|KiB|MiB|GiB|TiB)$)|\\$\\{",
+      "type": "string"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/Rogsiel/medic/main/schema/medic.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "checks": {
+      "additionalProperties": {
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "cpu"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "additionalProperties": false,
+              "properties": {
+                "allow_failure": {
+                  "description": "Report a failure as a warning so it never fails the run; dependents still run.",
+                  "type": "boolean"
+                },
+                "depends_on": {
+                  "description": "Ids of checks that must pass (or warn) before this one starts. If any of them fails or is skipped, this check is skipped.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "expect": {
+                  "additionalProperties": false,
+                  "description": "What counts as healthy.",
+                  "properties": {
+                    "usage": {
+                      "additionalProperties": false,
+                      "description": "Average usage across all CPUs.",
+                      "minProperties": 1,
+                      "properties": {
+                        "fail": {
+                          "$ref": "#/$defs/percent"
+                        },
+                        "warn": {
+                          "$ref": "#/$defs/percent"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "name": {
+                  "description": "Display name (defaults to the check id).",
+                  "type": "string"
+                },
+                "retry": {
+                  "additionalProperties": false,
+                  "description": "Retry a failing check, e.g. {until: 60s, interval: 2s} or {attempts: 3, interval: 1s}.",
+                  "properties": {
+                    "attempts": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "pattern": "\\$\\{",
+                          "type": "string"
+                        }
+                      ],
+                      "description": "Maximum number of attempts in total (1 = no retry)."
+                    },
+                    "interval": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Pause between attempts (a small random jitter is added)."
+                    },
+                    "until": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Keep retrying until this much time has passed since the first attempt."
+                    }
+                  },
+                  "type": "object"
+                },
+                "sample": {
+                  "$ref": "#/$defs/duration",
+                  "description": "How long to measure CPU usage."
+                },
+                "tags": {
+                  "description": "Labels for selecting checks with --only/--skip tag:NAME.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "timeout": {
+                  "$ref": "#/$defs/duration",
+                  "description": "Time limit for a single attempt (default: defaults.timeout)."
+                },
+                "type": {
+                  "const": "cpu",
+                  "description": "Sample CPU usage on this machine."
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "disk"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "additionalProperties": false,
+              "properties": {
+                "allow_failure": {
+                  "description": "Report a failure as a warning so it never fails the run; dependents still run.",
+                  "type": "boolean"
+                },
+                "depends_on": {
+                  "description": "Ids of checks that must pass (or warn) before this one starts. If any of them fails or is skipped, this check is skipped.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "expect": {
+                  "additionalProperties": false,
+                  "description": "What counts as healthy.",
+                  "properties": {
+                    "free": {
+                      "additionalProperties": false,
+                      "description": "Free space.",
+                      "minProperties": 1,
+                      "properties": {
+                        "fail": {
+                          "$ref": "#/$defs/size"
+                        },
+                        "warn": {
+                          "$ref": "#/$defs/size"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "inodes_used": {
+                      "additionalProperties": false,
+                      "description": "Share of inodes in use.",
+                      "minProperties": 1,
+                      "properties": {
+                        "fail": {
+                          "$ref": "#/$defs/percent"
+                        },
+                        "warn": {
+                          "$ref": "#/$defs/percent"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "used": {
+                      "additionalProperties": false,
+                      "description": "Share of space in use.",
+                      "minProperties": 1,
+                      "properties": {
+                        "fail": {
+                          "$ref": "#/$defs/percent"
+                        },
+                        "warn": {
+                          "$ref": "#/$defs/percent"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "name": {
+                  "description": "Display name (defaults to the check id).",
+                  "type": "string"
+                },
+                "path": {
+                  "description": "Any path on the filesystem to check, e.g. / or /var/lib/docker.",
+                  "type": "string"
+                },
+                "retry": {
+                  "additionalProperties": false,
+                  "description": "Retry a failing check, e.g. {until: 60s, interval: 2s} or {attempts: 3, interval: 1s}.",
+                  "properties": {
+                    "attempts": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "pattern": "\\$\\{",
+                          "type": "string"
+                        }
+                      ],
+                      "description": "Maximum number of attempts in total (1 = no retry)."
+                    },
+                    "interval": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Pause between attempts (a small random jitter is added)."
+                    },
+                    "until": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Keep retrying until this much time has passed since the first attempt."
+                    }
+                  },
+                  "type": "object"
+                },
+                "tags": {
+                  "description": "Labels for selecting checks with --only/--skip tag:NAME.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "timeout": {
+                  "$ref": "#/$defs/duration",
+                  "description": "Time limit for a single attempt (default: defaults.timeout)."
+                },
+                "type": {
+                  "const": "disk",
+                  "description": "Check usage and free space of the filesystem holding a path."
+                }
+              },
+              "required": [
+                "path",
+                "type"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "dns"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "additionalProperties": false,
+              "properties": {
+                "allow_failure": {
+                  "description": "Report a failure as a warning so it never fails the run; dependents still run.",
+                  "type": "boolean"
+                },
+                "depends_on": {
+                  "description": "Ids of checks that must pass (or warn) before this one starts. If any of them fails or is skipped, this check is skipped.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "expect": {
+                  "additionalProperties": false,
+                  "description": "What counts as healthy.",
+                  "properties": {
+                    "addresses": {
+                      "description": "Addresses that must all be in the answer.",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "latency": {
+                      "additionalProperties": false,
+                      "description": "Resolution time limits.",
+                      "minProperties": 1,
+                      "properties": {
+                        "fail": {
+                          "$ref": "#/$defs/duration"
+                        },
+                        "warn": {
+                          "$ref": "#/$defs/duration"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "host": {
+                  "description": "Hostname to resolve.",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Display name (defaults to the check id).",
+                  "type": "string"
+                },
+                "retry": {
+                  "additionalProperties": false,
+                  "description": "Retry a failing check, e.g. {until: 60s, interval: 2s} or {attempts: 3, interval: 1s}.",
+                  "properties": {
+                    "attempts": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "pattern": "\\$\\{",
+                          "type": "string"
+                        }
+                      ],
+                      "description": "Maximum number of attempts in total (1 = no retry)."
+                    },
+                    "interval": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Pause between attempts (a small random jitter is added)."
+                    },
+                    "until": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Keep retrying until this much time has passed since the first attempt."
+                    }
+                  },
+                  "type": "object"
+                },
+                "server": {
+                  "description": "DNS server to query, ip or ip:port (default: the system resolver).",
+                  "type": "string"
+                },
+                "tags": {
+                  "description": "Labels for selecting checks with --only/--skip tag:NAME.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "timeout": {
+                  "$ref": "#/$defs/duration",
+                  "description": "Time limit for a single attempt (default: defaults.timeout)."
+                },
+                "type": {
+                  "const": "dns",
+                  "description": "Resolve a hostname, optionally via a specific DNS server, and check the addresses."
+                }
+              },
+              "required": [
+                "host",
+                "type"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "exec"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "additionalProperties": false,
+              "properties": {
+                "allow_failure": {
+                  "description": "Report a failure as a warning so it never fails the run; dependents still run.",
+                  "type": "boolean"
+                },
+                "command": {
+                  "description": "Program and arguments, run directly without a shell, e.g. [pg_isready, -h, db]. Set exactly one of command or shell.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "cwd": {
+                  "description": "Working directory.",
+                  "type": "string"
+                },
+                "depends_on": {
+                  "description": "Ids of checks that must pass (or warn) before this one starts. If any of them fails or is skipped, this check is skipped.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "env": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Extra environment variables for the command.",
+                  "type": "object"
+                },
+                "expect": {
+                  "additionalProperties": false,
+                  "description": "What counts as healthy (output: text only).",
+                  "properties": {
+                    "exit": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "pattern": "\\$\\{",
+                          "type": "string"
+                        }
+                      ],
+                      "description": "Required exit code."
+                    },
+                    "stdout_contains": {
+                      "description": "Text stdout must contain.",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "name": {
+                  "description": "Display name (defaults to the check id).",
+                  "type": "string"
+                },
+                "output": {
+                  "description": "text: judge by exit code and expect. json: the command prints {\"status\": \"passed|warning|failed\", \"message\": ..., \"details\": {...}} on stdout.",
+                  "enum": [
+                    "text",
+                    "json"
+                  ],
+                  "type": "string"
+                },
+                "retry": {
+                  "additionalProperties": false,
+                  "description": "Retry a failing check, e.g. {until: 60s, interval: 2s} or {attempts: 3, interval: 1s}.",
+                  "properties": {
+                    "attempts": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "pattern": "\\$\\{",
+                          "type": "string"
+                        }
+                      ],
+                      "description": "Maximum number of attempts in total (1 = no retry)."
+                    },
+                    "interval": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Pause between attempts (a small random jitter is added)."
+                    },
+                    "until": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Keep retrying until this much time has passed since the first attempt."
+                    }
+                  },
+                  "type": "object"
+                },
+                "shell": {
+                  "description": "Command line run by sh -c (cmd /c on Windows), for pipes and redirects. Set exactly one of command or shell.",
+                  "type": "string"
+                },
+                "tags": {
+                  "description": "Labels for selecting checks with --only/--skip tag:NAME.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "timeout": {
+                  "$ref": "#/$defs/duration",
+                  "description": "Time limit for a single attempt (default: defaults.timeout)."
+                },
+                "type": {
+                  "const": "exec",
+                  "description": "Run a command and judge it by exit code and output, or let it report its own result as JSON."
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "file"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "additionalProperties": false,
+              "properties": {
+                "allow_failure": {
+                  "description": "Report a failure as a warning so it never fails the run; dependents still run.",
+                  "type": "boolean"
+                },
+                "depends_on": {
+                  "description": "Ids of checks that must pass (or warn) before this one starts. If any of them fails or is skipped, this check is skipped.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "expect": {
+                  "additionalProperties": false,
+                  "description": "What counts as healthy.",
+                  "properties": {
+                    "age": {
+                      "additionalProperties": false,
+                      "description": "Time since last modification.",
+                      "minProperties": 1,
+                      "properties": {
+                        "fail": {
+                          "$ref": "#/$defs/duration"
+                        },
+                        "warn": {
+                          "$ref": "#/$defs/duration"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "contains": {
+                      "description": "Text the file must contain (first 10MiB are searched).",
+                      "type": "string"
+                    },
+                    "exists": {
+                      "description": "true: the path must exist. false: it must not exist (e.g. a maintenance flag).",
+                      "type": "boolean"
+                    },
+                    "mode": {
+                      "description": "Exact permission bits in octal, e.g. \"0600\".",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "name": {
+                  "description": "Display name (defaults to the check id).",
+                  "type": "string"
+                },
+                "path": {
+                  "description": "Path to the file or directory (~ is expanded).",
+                  "type": "string"
+                },
+                "retry": {
+                  "additionalProperties": false,
+                  "description": "Retry a failing check, e.g. {until: 60s, interval: 2s} or {attempts: 3, interval: 1s}.",
+                  "properties": {
+                    "attempts": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "pattern": "\\$\\{",
+                          "type": "string"
+                        }
+                      ],
+                      "description": "Maximum number of attempts in total (1 = no retry)."
+                    },
+                    "interval": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Pause between attempts (a small random jitter is added)."
+                    },
+                    "until": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Keep retrying until this much time has passed since the first attempt."
+                    }
+                  },
+                  "type": "object"
+                },
+                "tags": {
+                  "description": "Labels for selecting checks with --only/--skip tag:NAME.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "timeout": {
+                  "$ref": "#/$defs/duration",
+                  "description": "Time limit for a single attempt (default: defaults.timeout)."
+                },
+                "type": {
+                  "const": "file",
+                  "description": "Check that a file exists (or not), its permissions, age and contents."
+                }
+              },
+              "required": [
+                "path",
+                "type"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "http"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "additionalProperties": false,
+              "properties": {
+                "allow_failure": {
+                  "description": "Report a failure as a warning so it never fails the run; dependents still run.",
+                  "type": "boolean"
+                },
+                "body": {
+                  "description": "Request body.",
+                  "type": "string"
+                },
+                "depends_on": {
+                  "description": "Ids of checks that must pass (or warn) before this one starts. If any of them fails or is skipped, this check is skipped.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "expect": {
+                  "additionalProperties": false,
+                  "description": "What counts as healthy.",
+                  "properties": {
+                    "body_contains": {
+                      "description": "Text the response body must contain.",
+                      "type": "string"
+                    },
+                    "json": {
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "description": "Fields the JSON body must have: path -\u003e expected value. Paths look like $.status or $.items[0].name.",
+                      "type": "object"
+                    },
+                    "latency": {
+                      "additionalProperties": false,
+                      "description": "Total response time limits.",
+                      "minProperties": 1,
+                      "properties": {
+                        "fail": {
+                          "$ref": "#/$defs/duration"
+                        },
+                        "warn": {
+                          "$ref": "#/$defs/duration"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "status": {
+                      "description": "Accepted status codes (default: any 2xx).",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "pattern": "\\$\\{",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                },
+                "follow_redirects": {
+                  "description": "Follow up to 10 redirects.",
+                  "type": "boolean"
+                },
+                "headers": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Request headers. Use ${VAR} plus 'secrets:' for tokens.",
+                  "type": "object"
+                },
+                "insecure": {
+                  "description": "Skip TLS certificate verification (shown in the report). Avoid.",
+                  "type": "boolean"
+                },
+                "method": {
+                  "description": "HTTP method.",
+                  "enum": [
+                    "GET",
+                    "HEAD",
+                    "POST",
+                    "PUT",
+                    "PATCH",
+                    "DELETE",
+                    "OPTIONS"
+                  ],
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Display name (defaults to the check id).",
+                  "type": "string"
+                },
+                "retry": {
+                  "additionalProperties": false,
+                  "description": "Retry a failing check, e.g. {until: 60s, interval: 2s} or {attempts: 3, interval: 1s}.",
+                  "properties": {
+                    "attempts": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "pattern": "\\$\\{",
+                          "type": "string"
+                        }
+                      ],
+                      "description": "Maximum number of attempts in total (1 = no retry)."
+                    },
+                    "interval": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Pause between attempts (a small random jitter is added)."
+                    },
+                    "until": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Keep retrying until this much time has passed since the first attempt."
+                    }
+                  },
+                  "type": "object"
+                },
+                "tags": {
+                  "description": "Labels for selecting checks with --only/--skip tag:NAME.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "timeout": {
+                  "$ref": "#/$defs/duration",
+                  "description": "Time limit for a single attempt (default: defaults.timeout)."
+                },
+                "type": {
+                  "const": "http",
+                  "description": "Request a URL and check status, body, JSON fields and latency."
+                },
+                "url": {
+                  "description": "URL to request (http:// or https://).",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "url"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "load"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "additionalProperties": false,
+              "properties": {
+                "allow_failure": {
+                  "description": "Report a failure as a warning so it never fails the run; dependents still run.",
+                  "type": "boolean"
+                },
+                "depends_on": {
+                  "description": "Ids of checks that must pass (or warn) before this one starts. If any of them fails or is skipped, this check is skipped.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "expect": {
+                  "additionalProperties": false,
+                  "description": "What counts as healthy.",
+                  "properties": {
+                    "per_cpu": {
+                      "additionalProperties": false,
+                      "description": "Load average divided by the number of CPUs (100% = one runnable task per CPU).",
+                      "minProperties": 1,
+                      "properties": {
+                        "fail": {
+                          "$ref": "#/$defs/percent"
+                        },
+                        "warn": {
+                          "$ref": "#/$defs/percent"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "name": {
+                  "description": "Display name (defaults to the check id).",
+                  "type": "string"
+                },
+                "retry": {
+                  "additionalProperties": false,
+                  "description": "Retry a failing check, e.g. {until: 60s, interval: 2s} or {attempts: 3, interval: 1s}.",
+                  "properties": {
+                    "attempts": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "pattern": "\\$\\{",
+                          "type": "string"
+                        }
+                      ],
+                      "description": "Maximum number of attempts in total (1 = no retry)."
+                    },
+                    "interval": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Pause between attempts (a small random jitter is added)."
+                    },
+                    "until": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Keep retrying until this much time has passed since the first attempt."
+                    }
+                  },
+                  "type": "object"
+                },
+                "tags": {
+                  "description": "Labels for selecting checks with --only/--skip tag:NAME.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "timeout": {
+                  "$ref": "#/$defs/duration",
+                  "description": "Time limit for a single attempt (default: defaults.timeout)."
+                },
+                "type": {
+                  "const": "load",
+                  "description": "Check the load average relative to the number of CPUs (not supported on Windows)."
+                },
+                "window": {
+                  "description": "Which load average to use.",
+                  "enum": [
+                    "1m",
+                    "5m",
+                    "15m"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "memory"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "additionalProperties": false,
+              "properties": {
+                "allow_failure": {
+                  "description": "Report a failure as a warning so it never fails the run; dependents still run.",
+                  "type": "boolean"
+                },
+                "depends_on": {
+                  "description": "Ids of checks that must pass (or warn) before this one starts. If any of them fails or is skipped, this check is skipped.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "expect": {
+                  "additionalProperties": false,
+                  "description": "What counts as healthy.",
+                  "properties": {
+                    "available": {
+                      "additionalProperties": false,
+                      "description": "RAM available for new work.",
+                      "minProperties": 1,
+                      "properties": {
+                        "fail": {
+                          "$ref": "#/$defs/size"
+                        },
+                        "warn": {
+                          "$ref": "#/$defs/size"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "used": {
+                      "additionalProperties": false,
+                      "description": "Share of RAM in use.",
+                      "minProperties": 1,
+                      "properties": {
+                        "fail": {
+                          "$ref": "#/$defs/percent"
+                        },
+                        "warn": {
+                          "$ref": "#/$defs/percent"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "name": {
+                  "description": "Display name (defaults to the check id).",
+                  "type": "string"
+                },
+                "retry": {
+                  "additionalProperties": false,
+                  "description": "Retry a failing check, e.g. {until: 60s, interval: 2s} or {attempts: 3, interval: 1s}.",
+                  "properties": {
+                    "attempts": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "pattern": "\\$\\{",
+                          "type": "string"
+                        }
+                      ],
+                      "description": "Maximum number of attempts in total (1 = no retry)."
+                    },
+                    "interval": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Pause between attempts (a small random jitter is added)."
+                    },
+                    "until": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Keep retrying until this much time has passed since the first attempt."
+                    }
+                  },
+                  "type": "object"
+                },
+                "tags": {
+                  "description": "Labels for selecting checks with --only/--skip tag:NAME.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "timeout": {
+                  "$ref": "#/$defs/duration",
+                  "description": "Time limit for a single attempt (default: defaults.timeout)."
+                },
+                "type": {
+                  "const": "memory",
+                  "description": "Check RAM usage on this machine."
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "ping"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "additionalProperties": false,
+              "properties": {
+                "allow_failure": {
+                  "description": "Report a failure as a warning so it never fails the run; dependents still run.",
+                  "type": "boolean"
+                },
+                "count": {
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "pattern": "\\$\\{",
+                      "type": "string"
+                    }
+                  ],
+                  "description": "Number of echo requests."
+                },
+                "depends_on": {
+                  "description": "Ids of checks that must pass (or warn) before this one starts. If any of them fails or is skipped, this check is skipped.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "expect": {
+                  "additionalProperties": false,
+                  "description": "What counts as healthy.",
+                  "properties": {
+                    "loss": {
+                      "additionalProperties": false,
+                      "description": "Packet loss limits.",
+                      "minProperties": 1,
+                      "properties": {
+                        "fail": {
+                          "$ref": "#/$defs/percent"
+                        },
+                        "warn": {
+                          "$ref": "#/$defs/percent"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "rtt": {
+                      "additionalProperties": false,
+                      "description": "Average round-trip time limits.",
+                      "minProperties": 1,
+                      "properties": {
+                        "fail": {
+                          "$ref": "#/$defs/duration"
+                        },
+                        "warn": {
+                          "$ref": "#/$defs/duration"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "host": {
+                  "description": "Host or IP to ping.",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Display name (defaults to the check id).",
+                  "type": "string"
+                },
+                "retry": {
+                  "additionalProperties": false,
+                  "description": "Retry a failing check, e.g. {until: 60s, interval: 2s} or {attempts: 3, interval: 1s}.",
+                  "properties": {
+                    "attempts": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "pattern": "\\$\\{",
+                          "type": "string"
+                        }
+                      ],
+                      "description": "Maximum number of attempts in total (1 = no retry)."
+                    },
+                    "interval": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Pause between attempts (a small random jitter is added)."
+                    },
+                    "until": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Keep retrying until this much time has passed since the first attempt."
+                    }
+                  },
+                  "type": "object"
+                },
+                "tags": {
+                  "description": "Labels for selecting checks with --only/--skip tag:NAME.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "timeout": {
+                  "$ref": "#/$defs/duration",
+                  "description": "Time limit for a single attempt (default: defaults.timeout)."
+                },
+                "type": {
+                  "const": "ping",
+                  "description": "Send ICMP echo requests and check packet loss and round-trip time."
+                }
+              },
+              "required": [
+                "host",
+                "type"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "ssh"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "additionalProperties": false,
+              "properties": {
+                "allow_failure": {
+                  "description": "Report a failure as a warning so it never fails the run; dependents still run.",
+                  "type": "boolean"
+                },
+                "auth": {
+                  "description": "Log in with a key to prove authentication works (requires user and key).",
+                  "type": "boolean"
+                },
+                "depends_on": {
+                  "description": "Ids of checks that must pass (or warn) before this one starts. If any of them fails or is skipped, this check is skipped.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "expect": {
+                  "additionalProperties": false,
+                  "description": "What counts as healthy.",
+                  "properties": {
+                    "banner_contains": {
+                      "description": "Text the server version banner must contain (e.g. OpenSSH).",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "insecure": {
+                  "description": "Skip host key verification during auth (shown in the report). Avoid.",
+                  "type": "boolean"
+                },
+                "key": {
+                  "description": "Private key file for auth (unencrypted; ~ is expanded).",
+                  "type": "string"
+                },
+                "known_hosts": {
+                  "description": "known_hosts file used to verify the host key during auth (default ~/.ssh/known_hosts).",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Display name (defaults to the check id).",
+                  "type": "string"
+                },
+                "retry": {
+                  "additionalProperties": false,
+                  "description": "Retry a failing check, e.g. {until: 60s, interval: 2s} or {attempts: 3, interval: 1s}.",
+                  "properties": {
+                    "attempts": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "pattern": "\\$\\{",
+                          "type": "string"
+                        }
+                      ],
+                      "description": "Maximum number of attempts in total (1 = no retry)."
+                    },
+                    "interval": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Pause between attempts (a small random jitter is added)."
+                    },
+                    "until": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Keep retrying until this much time has passed since the first attempt."
+                    }
+                  },
+                  "type": "object"
+                },
+                "tags": {
+                  "description": "Labels for selecting checks with --only/--skip tag:NAME.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "target": {
+                  "description": "host or host:port (port defaults to 22).",
+                  "type": "string"
+                },
+                "timeout": {
+                  "$ref": "#/$defs/duration",
+                  "description": "Time limit for a single attempt (default: defaults.timeout)."
+                },
+                "type": {
+                  "const": "ssh",
+                  "description": "Check that an SSH server answers, and optionally that key authentication works."
+                },
+                "user": {
+                  "description": "User for auth.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "target",
+                "type"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "swap"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "additionalProperties": false,
+              "properties": {
+                "allow_failure": {
+                  "description": "Report a failure as a warning so it never fails the run; dependents still run.",
+                  "type": "boolean"
+                },
+                "depends_on": {
+                  "description": "Ids of checks that must pass (or warn) before this one starts. If any of them fails or is skipped, this check is skipped.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "expect": {
+                  "additionalProperties": false,
+                  "description": "What counts as healthy.",
+                  "properties": {
+                    "used": {
+                      "additionalProperties": false,
+                      "description": "Share of swap in use.",
+                      "minProperties": 1,
+                      "properties": {
+                        "fail": {
+                          "$ref": "#/$defs/percent"
+                        },
+                        "warn": {
+                          "$ref": "#/$defs/percent"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "name": {
+                  "description": "Display name (defaults to the check id).",
+                  "type": "string"
+                },
+                "retry": {
+                  "additionalProperties": false,
+                  "description": "Retry a failing check, e.g. {until: 60s, interval: 2s} or {attempts: 3, interval: 1s}.",
+                  "properties": {
+                    "attempts": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "pattern": "\\$\\{",
+                          "type": "string"
+                        }
+                      ],
+                      "description": "Maximum number of attempts in total (1 = no retry)."
+                    },
+                    "interval": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Pause between attempts (a small random jitter is added)."
+                    },
+                    "until": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Keep retrying until this much time has passed since the first attempt."
+                    }
+                  },
+                  "type": "object"
+                },
+                "tags": {
+                  "description": "Labels for selecting checks with --only/--skip tag:NAME.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "timeout": {
+                  "$ref": "#/$defs/duration",
+                  "description": "Time limit for a single attempt (default: defaults.timeout)."
+                },
+                "type": {
+                  "const": "swap",
+                  "description": "Check swap usage on this machine (passes when no swap is configured)."
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "tcp"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "additionalProperties": false,
+              "properties": {
+                "allow_failure": {
+                  "description": "Report a failure as a warning so it never fails the run; dependents still run.",
+                  "type": "boolean"
+                },
+                "depends_on": {
+                  "description": "Ids of checks that must pass (or warn) before this one starts. If any of them fails or is skipped, this check is skipped.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "expect": {
+                  "additionalProperties": false,
+                  "description": "What counts as healthy.",
+                  "properties": {
+                    "banner_contains": {
+                      "description": "Text the server must send right after connecting (e.g. 'SSH-2.0', '220 ').",
+                      "type": "string"
+                    },
+                    "latency": {
+                      "additionalProperties": false,
+                      "description": "Connect time limits.",
+                      "minProperties": 1,
+                      "properties": {
+                        "fail": {
+                          "$ref": "#/$defs/duration"
+                        },
+                        "warn": {
+                          "$ref": "#/$defs/duration"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "open": {
+                      "description": "true: the port must accept connections. false: the port must refuse or not answer (e.g. a firewalled admin port).",
+                      "type": "boolean"
+                    }
+                  },
+                  "type": "object"
+                },
+                "name": {
+                  "description": "Display name (defaults to the check id).",
+                  "type": "string"
+                },
+                "retry": {
+                  "additionalProperties": false,
+                  "description": "Retry a failing check, e.g. {until: 60s, interval: 2s} or {attempts: 3, interval: 1s}.",
+                  "properties": {
+                    "attempts": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "pattern": "\\$\\{",
+                          "type": "string"
+                        }
+                      ],
+                      "description": "Maximum number of attempts in total (1 = no retry)."
+                    },
+                    "interval": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Pause between attempts (a small random jitter is added)."
+                    },
+                    "until": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Keep retrying until this much time has passed since the first attempt."
+                    }
+                  },
+                  "type": "object"
+                },
+                "tags": {
+                  "description": "Labels for selecting checks with --only/--skip tag:NAME.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "target": {
+                  "description": "host:port to connect to.",
+                  "type": "string"
+                },
+                "timeout": {
+                  "$ref": "#/$defs/duration",
+                  "description": "Time limit for a single attempt (default: defaults.timeout)."
+                },
+                "type": {
+                  "const": "tcp",
+                  "description": "Connect to a TCP port; optionally require it to be closed or to send a banner."
+                }
+              },
+              "required": [
+                "target",
+                "type"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "tls"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "additionalProperties": false,
+              "properties": {
+                "allow_failure": {
+                  "description": "Report a failure as a warning so it never fails the run; dependents still run.",
+                  "type": "boolean"
+                },
+                "depends_on": {
+                  "description": "Ids of checks that must pass (or warn) before this one starts. If any of them fails or is skipped, this check is skipped.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "expect": {
+                  "additionalProperties": false,
+                  "description": "What counts as healthy.",
+                  "properties": {
+                    "days_left": {
+                      "additionalProperties": false,
+                      "description": "Days until the leaf certificate expires.",
+                      "minProperties": 1,
+                      "properties": {
+                        "fail": {
+                          "$ref": "#/$defs/days"
+                        },
+                        "warn": {
+                          "$ref": "#/$defs/days"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "name": {
+                  "description": "Display name (defaults to the check id).",
+                  "type": "string"
+                },
+                "retry": {
+                  "additionalProperties": false,
+                  "description": "Retry a failing check, e.g. {until: 60s, interval: 2s} or {attempts: 3, interval: 1s}.",
+                  "properties": {
+                    "attempts": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "pattern": "\\$\\{",
+                          "type": "string"
+                        }
+                      ],
+                      "description": "Maximum number of attempts in total (1 = no retry)."
+                    },
+                    "interval": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Pause between attempts (a small random jitter is added)."
+                    },
+                    "until": {
+                      "$ref": "#/$defs/duration",
+                      "description": "Keep retrying until this much time has passed since the first attempt."
+                    }
+                  },
+                  "type": "object"
+                },
+                "server_name": {
+                  "description": "Name to verify the certificate against (default: the host).",
+                  "type": "string"
+                },
+                "tags": {
+                  "description": "Labels for selecting checks with --only/--skip tag:NAME.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "target": {
+                  "description": "host or host:port (port defaults to 443).",
+                  "type": "string"
+                },
+                "timeout": {
+                  "$ref": "#/$defs/duration",
+                  "description": "Time limit for a single attempt (default: defaults.timeout)."
+                },
+                "type": {
+                  "const": "tls",
+                  "description": "Verify a TLS certificate chain and how many days it has left."
+                }
+              },
+              "required": [
+                "target",
+                "type"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "properties": {
+          "type": {
+            "description": "Check type.",
+            "enum": [
+              "cpu",
+              "disk",
+              "dns",
+              "exec",
+              "file",
+              "http",
+              "load",
+              "memory",
+              "ping",
+              "ssh",
+              "swap",
+              "tcp",
+              "tls"
+            ]
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "type": "object"
+      },
+      "description": "Checks to run, keyed by id.",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z0-9][a-z0-9_-]*$"
+      },
+      "type": "object"
+    },
+    "concurrency": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "pattern": "\\$\\{",
+          "type": "string"
+        }
+      ],
+      "description": "Maximum number of checks running at the same time (default 8)."
+    },
+    "defaults": {
+      "additionalProperties": false,
+      "description": "Settings applied to every check that does not set its own.",
+      "properties": {
+        "retry": {
+          "additionalProperties": false,
+          "description": "Retry policy for checks without their own (default: no retry).",
+          "properties": {
+            "attempts": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "pattern": "\\$\\{",
+                  "type": "string"
+                }
+              ],
+              "description": "Maximum number of attempts in total (1 = no retry)."
+            },
+            "interval": {
+              "$ref": "#/$defs/duration",
+              "description": "Pause between attempts (a small random jitter is added)."
+            },
+            "until": {
+              "$ref": "#/$defs/duration",
+              "description": "Keep retrying until this much time has passed since the first attempt."
+            }
+          },
+          "type": "object"
+        },
+        "timeout": {
+          "$ref": "#/$defs/duration",
+          "description": "Time limit for one attempt of a check (default 5s)."
+        }
+      },
+      "type": "object"
+    },
+    "fail_on": {
+      "description": "What fails the run: 'failure' (default) or 'warning' (warnings fail too).",
+      "enum": [
+        "failure",
+        "warning"
+      ],
+      "type": "string"
+    },
+    "secrets": {
+      "description": "Names of environment variables whose values are masked (***) in all output (values shorter than 4 characters are not masked).",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "version": {
+      "const": 1,
+      "description": "Config format version. Must be 1."
+    }
+  },
+  "required": [
+    "checks",
+    "version"
+  ],
+  "title": "medic config",
+  "type": "object"
+}

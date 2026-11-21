@@ -1,0 +1,62 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Rogsiel/medic/main/schema/medic.schema.json
+# medic config. Reference: https://github.com/Rogsiel/medic/blob/main/docs/config.md
+version: 1
+
+defaults:
+  timeout: 5s
+
+checks:
+  # Local system
+  cpu:
+    type: cpu
+    expect:
+      usage: { warn: 80%, fail: 95% }
+  memory:
+    type: memory
+    expect:
+      used: { warn: 85%, fail: 95% }
+  swap:
+    type: swap
+    expect:
+      used: { warn: 50%, fail: 80% }
+  disk-root:
+    type: disk
+    path: /
+    expect:
+      used: { warn: 85%, fail: 92% }
+      free: { warn: 10GiB, fail: 2GiB }
+  load:
+    type: load
+    window: 5m
+    expect:
+      per_cpu: { warn: 100%, fail: 200% }
+
+  # Services: uncomment and edit. depends_on orders checks; retry waits for slow starters.
+  # tcp-example:
+  #   type: tcp
+  #   target: db.internal:5432
+  #   expect:
+  #     latency: { warn: 200ms, fail: 1s }
+  # http-example:
+  #   type: http
+  #   url: https://api.example.com/health
+  #   expect:
+  #     status: [200]
+  #     json: { "$.status": up }
+  #     latency: { warn: 300ms, fail: 2s }
+  # tls-example:
+  #   type: tls
+  #   target: example.com:443
+  #   expect:
+  #     days_left: { warn: 30d, fail: 7d }
+  # dns-example:
+  #   type: dns
+  #   host: api.example.com
+  #   server: 1.1.1.1
+  #   expect:
+  #     addresses: [203.0.113.10]
+  # exec-example:
+  #   type: exec
+  #   command: [pg_isready, -h, db.internal]
+  #   expect:
+  #     exit: 0

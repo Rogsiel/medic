@@ -1,0 +1,34 @@
+name: medic
+description: Health checks for pipelines. Install medic and optionally run it.
+branding:
+  icon: activity
+  color: green
+inputs:
+  version:
+    description: medic version to install (e.g. v0.2.0). Pin this for reproducible pipelines.
+    default: latest
+  args:
+    description: Arguments for medic, e.g. "-c medic.yaml --wait 2m". Leave empty to only install.
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Install medic
+      shell: bash
+      env:
+        MEDIC_VERSION: ${{ inputs.version }}
+        MEDIC_INSTALL_DIR: ${{ runner.temp }}/medic-bin
+      run: |
+        if [ "$RUNNER_OS" = "Windows" ]; then
+          echo "::error::the medic action supports Linux and macOS runners" ; exit 1
+        fi
+        sh "$GITHUB_ACTION_PATH/install.sh"
+        echo "$MEDIC_INSTALL_DIR" >> "$GITHUB_PATH"
+    - name: Run medic
+      if: inputs.args != ''
+      shell: bash
+      env:
+        MEDIC_ARGS: ${{ inputs.args }}
+      run: |
+        # shellcheck disable=SC2086
+        medic $MEDIC_ARGS

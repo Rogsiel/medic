@@ -1,0 +1,28 @@
+{
+  "$id": "https://raw.githubusercontent.com/Rogsiel/medic/main/schema/exec-output.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Printed as one JSON object on stdout by a command run with `output: json`.",
+  "properties": {
+    "details": {
+      "description": "Extra data, shown with -v and in JSON output.",
+      "type": "object"
+    },
+    "message": {
+      "description": "One-line human summary.",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "passed",
+        "warning",
+        "failed"
+      ]
+    }
+  },
+  "required": [
+    "status"
+  ],
+  "title": "medic exec check result",
+  "type": "object"
+}
